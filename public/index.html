@@ -1,0 +1,25 @@
+<!doctype html><html lang="tr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>HeaderGuard · HTTP güvenlik başlıkları</title><meta name="description" content="HTTP yanıt başlıklarını cihazında incele. Altı açıklamalı kontrol, önce/sonra örnekleri ve ham veri içermeyen JSON raporu.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/styles.css"><script type="module" src="/app.js"></script>
+</head><body>
+<header><a href="/" class="brand">[ H ] <span>HeaderGuard</span></a><span class="edition">WEB GÜVENLİĞİ / 06</span><a class="source" href="/download/header-guard-source.zip" download>Kaynak kodu ↗</a></header>
+<main>
+<section class="intro"><div><p class="eyebrow">HTTP YANIT İNCELEMESİ</p><h1>Başlıkları oku.<br><span>Politikanın ne yaptığını anla.</span></h1></div><p>HTML sayfasının yanıt başlıklarını yapıştır.<br>Altı temel kontrolü açıklamalarıyla incele.<br>İçerik yalnızca cihazında işlenir.</p></section>
+<div class="toolbar"><div class="sample-controls" aria-label="Eğitim örnekleri"><span>ÖRNEK</span><button id="before" type="button" aria-pressed="true">Önce</button><button id="after" type="button" aria-pressed="false">Sonra</button></div><span id="mode" class="mode">SENTETİK YANIT</span><button id="clear" type="button" class="quiet">Temizle</button></div>
+<div class="workspace">
+<section class="editor" aria-labelledby="input-title"><div class="panel-title"><h2 id="input-title">01 / Yanıt başlıkları</h2><span id="bytes">0 B</span></div>
+<label class="scheme" for="scheme">Yanıtın bağlantısı <select id="scheme"><option value="https">HTTPS</option><option value="http">HTTP</option><option value="unknown">Bilmiyorum</option></select></label>
+<label class="sr-only" for="input">Ham HTTP yanıt başlıkları</label><textarea id="input" spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="input-help"></textarea>
+<p id="input-help" class="input-help">Tek yanıt bloğu · en fazla 64 KiB ve 200 başlık. Yapıştırılan çerez ve diğer değerler bu giriş alanında görünür.</p>
+<button id="analyze" type="button" class="primary">Başlıkları incele <span aria-hidden="true">→</span></button><p id="status" role="status" aria-live="polite">Örnek hazırlanıyor…</p>
+<details class="capture"><summary>Yanıt başlıklarını nasıl alırım?</summary><p>Kendi sitenin HTML sayfası için terminalde aşağıdaki komutu çalıştır. Adresi kendi adresinle değiştir, çıktıyı yukarıya yapıştır.</p><code>curl -sS -D - -o /dev/null https://example.com</code><p>Alternatif: tarayıcının Network sekmesinden sayfa isteğinin Response Headers bölümünü kopyala. Araç adresine istek göndermez.</p></details>
+</section>
+<section class="results" aria-labelledby="results-title"><div class="panel-title"><h2 id="results-title">02 / Kontrol sonuçları</h2><button id="export" class="quiet" type="button" disabled>JSON indir ↗</button></div>
+<div class="summary"><div><strong id="pass">—</strong><span>Kontrolü geçti</span></div><div><strong id="review">—</strong><span>İncele</span></div><div><strong id="missing">—</strong><span>Eksik</span></div></div>
+<p id="result-note" class="result-note">Bu sonuçlar bir güvenlik puanı değildir.</p><div id="checks" class="checks"></div><p class="report-note">İndirilen raporda ham başlık, çerez, token veya yanıttaki adresler bulunmaz. Yalnızca kontrol sonuçları, doküman bağlantıları ve genel metaveriler yer alır.</p>
+</section></div>
+<section class="limits"><h2>Başlığın bulunması, doğru koruma demek değildir.</h2><p>HeaderGuard, yapıştırdığın HTML yanıtı için sınırlı bir ön inceleme yapar. Tarayıcı davranışını, TLS sertifikasını, uygulama açıklarını ve tüm CSP söz dizimini doğrulamaz. Çerez ve CORS politikaları kapsam dışıdır. Önerileri uygulamanın ihtiyaçlarıyla birlikte değerlendir.</p></section>
+</main><footer><span>Büşra Buse Uçar / AI destekli kişisel proje</span><span>Yerel analiz · kalıcı tarama geçmişi yok</span></footer>
+</body></html>
