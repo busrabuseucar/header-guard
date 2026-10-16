@@ -101,9 +101,7 @@ Bu kodları doğrudan “site güvenli/güvensiz” kararı olarak kullanma; öz
 
 Yerel doğrulamada **29 test geçti**: 23 analiz motoru ve 6 gerçek CLI testi. CI; kurulum, tür kontrolü, derleme, testler ve kaynak paketi denetimini çalıştıracak şekilde yapılandırılmıştır. [GitHub'daki çalışma sonuçlarını incele](https://github.com/busrabuseucar/header-guard/actions/workflows/ci.yml). Tarayıcı görsel/uçtan uca testi bu doğrulamalara dahil değildir. Kaynak `.openai/hosting.json` içindeki proje kimliği indirilen ZIP'ten çıkarılır.
 
-## Öğrenme ve CV
 
-[Öğrenme alıştırması](docs/LEARNING.md) · [CV taslağı](docs/CV.md)
 
 ## Teknik dayanaklar
 
