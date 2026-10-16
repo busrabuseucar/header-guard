@@ -18,12 +18,13 @@ npm ci
 npm run check
 npm run build
 npm test
+python3 -m unittest discover -s tests -p 'test_*.py'
 npm run source
 node scripts/check-assets.mjs
 npm start
 ```
 
-Yerel demo: `http://127.0.0.1:8080`. Kaynak ZIP üretimi ve yerel HTTP sunucusu Python 3 kullanır. Uygulama çalışma zamanında üçüncü taraf JavaScript bağımlılığı veya API anahtarı istemez.
+Yerel demo: `http://127.0.0.1:8080`. Kaynak ZIP üretimi ve yerel HTTP sunucusu Python 3.10+ kullanır. Göreli kaynak yolları alt dizinde yayını da destekler. Uygulama çalışma zamanında üçüncü taraf JavaScript bağımlılığı veya API anahtarı istemez.
 
 ## Bir dakikalık demo
 
@@ -65,9 +66,9 @@ Cookie/SameSite, CORS, Permissions-Policy, COOP/COEP, sertifika zinciri, TLS sü
 
 ## Girdi ve gizlilik
 
-- Tek HTTP yanıtı; isteğe bağlı HTTP/1.0, HTTP/1.1, HTTP/2 veya HTTP/3 durum satırı. Başlık adları büyük/küçük harfe duyarsızdır; tekrarlanan alanlar sırayla korunur.
+- Tek HTTP yanıtı; isteğe bağlı HTTP/1.0, HTTP/1.1, HTTP/2 veya HTTP/3 durum satırı. Değerlerin kenarlarında yalnızca HTTP boşluğu (SP/HTAB) temizlenir; Unicode boşluklar sessizce geçerli politikaya dönüştürülmez. Başlık adları büyük/küçük harfe duyarsızdır; tekrarlanan alanlar sırayla korunur.
 - En fazla **64 KiB UTF-8**, **200 başlık**, satır başına **8.192 UTF-16 kod birimi**. CRLF ve LF desteklenir. Kontrol karakterleri, katlanmış/girintili satırlar, gövde ve ikinci yanıt reddedilir.
-- Ham girdi, kullanıcının metin alanında görünür ve yerel analiz sırasında bellektedir. Analiz sonuçları hiçbir ham başlık değeri içermez. JSON yalnızca açık alan listesiyle üretilir; satır sayısı yerine başlık sayısı, girdi boyutu, bağlantı türü ve durum kodu metaverileri kalır.
+- Ham girdi, kullanıcının metin alanında görünür ve yerel analiz sırasında bellektedir. Analiz sonuçları hiçbir ham başlık değeri içermez. JSON yalnızca açık alan listesiyle üretilir; HTML dışı veya 2xx olmayan yanıtlara ait sabit bağlam uyarıları da korunur; satır sayısı yerine başlık sayısı, girdi boyutu, bağlantı türü ve durum kodu metaverileri kalır.
 - Uygulamada kalıcı kayıt, analitik veya tarama geçmişi yoktur. Temizle, girdiyi ve sonuçları boşaltır; JavaScript belleği için kriptografik silme garantisi verilmez.
 - Raporu paylaşmadan önce genel metaverilerin de paylaşmaya uygun olduğunu kontrol et. Doküman bağlantıları sabittir; girdiden bağlantı üretilmez.
 
@@ -99,11 +100,22 @@ Bu kodları doğrudan “site güvenli/güvensiz” kararı olarak kullanma; öz
 - `tests/`: kuralların sınırları, rapor gizliliği ve gerçek CLI testleri.
 - `.github/workflows/ci.yml`: kurulum, tür kontrolü, derleme, test ve kaynak/bağlantı denetimi.
 
-Yerel doğrulamada **29 test geçti**: 23 analiz motoru ve 6 gerçek CLI testi. CI; kurulum, tür kontrolü, derleme, testler ve kaynak paketi denetimini çalıştıracak şekilde yapılandırılmıştır. [GitHub'daki çalışma sonuçlarını incele](https://github.com/busrabuseucar/header-guard/actions/workflows/ci.yml). Tarayıcı görsel/uçtan uca testi bu doğrulamalara dahil değildir. Kaynak `.openai/hosting.json` içindeki proje kimliği indirilen ZIP'ten çıkarılır.
+**31 Node testi** (25 motor, 6 gerçek CLI), **1 Python paketleme testi** ve **6 Chromium senaryosu** (3 akış × masaüstü/Pixel 7 emülasyonu) bulunur. Tarayıcı testleri önce/sonra örneklerini, HTTPS/HTTP değişikliğini, rapor indirmeyi, bağlam uyarılarını, ham değerlerin rapora taşınmamasını, ağ/depolama kullanımını, temizlemeyi ve bozuk girdiden kurtarmayı kontrol eder. Fiziksel cihaz, canlı sunucu başlıkları veya gerçek saldırı dayanıklılığı doğrulaması değildir.
 
+Geliştirme bağımlılıkları TypeScript 5.9.3 ve Playwright 1.58.2 olarak sabittir. Tarayıcı kontrollerini çalıştırmak için:
 
+```bash
+npx playwright install chromium
+npm run test:browser
+```
+
+CI tür kontrolü, derleme, Node/Python testleri, kaynak paketi, bağlantı denetimi ve Chromium senaryolarını çalıştırır. Hatalı tarayıcı koşularının izleri saklanır; yalnızca sentetik girdiler kullanılır.
+
+Kaynak ZIP açık dosya/dizin/uzantı listesiyle oluşturulur. Ortam dosyaları, özel JSON/veritabanları, sembolik bağlantılar, bağımlılıklar ve test çıktıları dışarıda kalır. Yayın kimliği yerine yalnızca `dist` dizinini belirten manifest eklenir. Bu paketleyici, izin verilen kaynak dosyalarına yazılmış sırları tespit eden bir tarayıcı değildir.
 
 ## Teknik dayanaklar
+
+- [RFC 9110: HTTP alan değerleri ve SP/HTAB boşluğu](https://www.rfc-editor.org/rfc/rfc9110.html#section-5.6.3)
 
 - [MDN: HSTS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Strict-Transport-Security)
 - [MDN: X-Content-Type-Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/X-Content-Type-Options)

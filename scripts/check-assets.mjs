@@ -1,7 +1,7 @@
 import {readFile,access,readdir} from 'node:fs/promises';
 import {resolve} from 'node:path';
 const html=await readFile('dist/index.html','utf8');
-for(const m of html.matchAll(/(?:src|href)="(\/[^"#?]*)"/g))if(m[1]!=='/')await access(resolve('dist','.'+m[1]));
+for(const m of html.matchAll(/(?:src|href)="(\.\/[^"#?]*)"/g))if(m[1]!=='./')await access(resolve('dist',m[1]));
 for(const name of await readdir('dist'))if(name.endsWith('.js')){
  const source=await readFile('dist/'+name,'utf8');
  for(const m of source.matchAll(/(?:from\s*|import\s*)['"](\.\/[^'"]+)['"]/g))await access(resolve('dist',m[1]));

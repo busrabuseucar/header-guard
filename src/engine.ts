@@ -16,6 +16,7 @@ export const META:Record<CheckId,{title:string;reason:string;action:string;sourc
  disclosure:{title:'Teknoloji bilgisinin ifşası',reason:'Server ve X-Powered-By başlıkları teknoloji hakkında ipucu verebilir. Bu başlıkların varlığı tek başına bir güvenlik açığı değildir.',action:'Gereksiz ürün/sürüm bilgisini kaldırmayı değerlendir. Bunu güncelleme, erişim kontrolü veya diğer güvenlik önlemlerinin yerine koyma.',source:'https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html'},
 };
 function check(id:CheckId,status:Status,summary:string):Check{return {id,status,summary,...META[id]};}
+const trimOws=(value:string)=>value.replace(/^[ \t]+|[ \t]+$/g,'');
 export function parseHeaders(input:string):Parsed{
  const bytes=new TextEncoder().encode(input).length;
  if(bytes>LIMITS.bytes)throw new InputError('Girdi 64 KiB sınırını aşıyor. Tek bir yanıt bloğu kullan.');
@@ -36,7 +37,7 @@ export function parseHeaders(input:string):Parsed{
    if(!field)throw new InputError('Geçersiz başlık satırı. Biçim “Başlık-Adı: değer” olmalı.');
    started=true;headerCount++;
    if(headerCount>LIMITS.headers)throw new InputError('Bir yanıtta en fazla 200 başlık destekleniyor.');
-   const name=field[1]!.toLowerCase(),value=field[2]!.trim();headers.set(name,[...(headers.get(name)??[]),value]);
+   const name=field[1]!.toLowerCase(),value=trimOws(field[2]!);headers.set(name,[...(headers.get(name)??[]),value]);
  }
  if(!headerCount)throw new InputError('Durum satırı var ancak analiz edilecek başlık yok.');
  return {headers,statusCode,headerCount,bytes};
@@ -48,8 +49,8 @@ function parseCsp(values:string[]):Csp{
  const policy=values[0]!;
  if(!policy||policy.includes(',')){out.ambiguous=true;return out;}
  for(const part of policy.split(';')){
-   if(!part.trim())continue;
-   const [rawName,...tokens]=part.trim().split(/[ \t]+/);const name=rawName!.toLowerCase();
+   if(!trimOws(part))continue;
+   const [rawName,...tokens]=trimOws(part).split(/[ \t]+/);const name=rawName!.toLowerCase();
    if(!/^[a-z][a-z0-9-]*$/.test(name)){out.ambiguous=true;continue;}
    if(out.directives.has(name)){out.ambiguous=true;continue;}
    out.directives.set(name,tokens);
@@ -64,9 +65,9 @@ function hsts(values:string[],scheme:Scheme):Check{
  if(!values.length)return check('hsts','missing','HTTPS yanıtında HSTS başlığı yok.');
  if(values.length!==1)return check('hsts','review','HSTS başlığı tekrarlanmış. Tek ve açık bir politika gönder.');
  const raw=values[0]!;if(!raw)return check('hsts','review','HSTS değeri boş.');
- const parts=raw.split(';').map(p=>p.trim()).filter(Boolean),seen=new Set<string>();let age:number|undefined;
+ const parts=raw.split(';').map(p=>trimOws(p)).filter(Boolean),seen=new Set<string>();let age:number|undefined;
  for(const part of parts){
-   const m=/^([A-Za-z0-9-]+)(?:\s*=\s*(.*))?$/.exec(part);
+   const m=/^([A-Za-z0-9-]+)(?:[ \t]*=[ \t]*(.*))?$/.exec(part);
    if(!m)return check('hsts','review','HSTS yönerge biçimi desteklenmiyor.');
    const name=m[1]!.toLowerCase();if(seen.has(name))return check('hsts','review','HSTS içinde yinelenen yönerge var.');seen.add(name);
    if(name==='max-age'){
@@ -100,24 +101,25 @@ function framing(csp:Csp,xfo:string[]):Check{
 function referrer(values:string[]):Check{
  if(!values.length)return check('referrer','missing','Açık Referrer-Policy yok; tarayıcı varsayılanı ayrıca geçerli olabilir.');
  const known=new Set(['no-referrer','no-referrer-when-downgrade','origin','origin-when-cross-origin','same-origin','strict-origin','strict-origin-when-cross-origin','unsafe-url']);
- const tokens=values.flatMap(v=>v.split(',').map(t=>t.trim()));
+ const tokens=values.flatMap(v=>v.split(',').map(t=>trimOws(t)));
  const recognized=tokens.filter(t=>known.has(t));const effective=recognized.at(-1);
  if(!effective)return check('referrer','review','Desteklenen bir Referrer-Policy değeri bulunamadı.');
  if(!['no-referrer','same-origin','strict-origin','strict-origin-when-cross-origin'].includes(effective))return check('referrer','review','Desteklenen son politika bu aracın kısıtlı paylaşım profilini geçmiyor.');
  return check('referrer','pass','Desteklenen son politika, kısıtlı adres paylaşımı profilini geçti.');
 }
+const CONTEXT_NOTES:readonly string[]=["Bu analiz HTML sayfası yanıtı içindir; uygulamanın güvenli olduğunu kanıtlamaz.", "Tek bir text/html Content-Type doğrulanamadı. HTML dışı yanıtlarda bazı kontroller uygun olmayabilir.", "Yanıt başarılı 2xx aralığında değil. Yönlendirme veya hata yanıtı, hedef sayfanın başlıklarını temsil etmeyebilir."];
 export function analyze(input:string,scheme:Scheme):Analysis{
  if(!['https','http','unknown'].includes(scheme))throw new InputError('Bağlantı türü HTTPS, HTTP veya bilinmiyor olmalı.');
  const p=parseHeaders(input),get=(name:string)=>p.headers.get(name)??[];
  const csp=parseCsp(get('content-security-policy'));const sniff=get('x-content-type-options');
  const checks=[hsts(get('strict-transport-security'),scheme),!sniff.length?check('nosniff','missing','X-Content-Type-Options başlığı yok.'):sniff.length===1&&/^nosniff$/i.test(sniff[0]!)?check('nosniff','pass','Tek nosniff değeri bulundu.'):check('nosniff','review','Başlık boş, tekrarlı veya nosniff dışında bir değer içeriyor.'),cspCheck(csp,get('content-security-policy-report-only').length>0),framing(csp,get('x-frame-options')),referrer(get('referrer-policy')),get('server').length||get('x-powered-by').length?check('disclosure','review','Server veya X-Powered-By başlığı var. Bu bilgi amaçlı bir incelemedir.'):check('disclosure','pass','Server ve X-Powered-By başlıkları bulunmadı. Diğer izler incelenmedi.')];
- const notes=['Bu analiz HTML sayfası yanıtı içindir; uygulamanın güvenli olduğunu kanıtlamaz.'];
+ const notes=[CONTEXT_NOTES[0]!];
  const contentType=get('content-type');
- if(contentType.length!==1||!/^text\/html(?:\s*;|$)/i.test(contentType[0]!))notes.push('Tek bir text/html Content-Type doğrulanamadı. HTML dışı yanıtlarda bazı kontroller uygun olmayabilir.');
- if(p.statusCode!==null&&(p.statusCode<200||p.statusCode>=300))notes.push('Yanıt başarılı 2xx aralığında değil. Yönlendirme veya hata yanıtı, hedef sayfanın başlıklarını temsil etmeyebilir.');
+ if(contentType.length!==1||!/^text\/html(?:[ \t]*;|$)/i.test(contentType[0]!))notes.push(CONTEXT_NOTES[1]!);
+ if(p.statusCode!==null&&(p.statusCode<200||p.statusCode>=300))notes.push(CONTEXT_NOTES[2]!);
  return {schemaVersion:1,scheme,statusCode:p.statusCode,headerCount:p.headerCount,inputBytes:p.bytes,notes,checks};
 }
 export function exportReport(result:Analysis):string{
  // Static descriptions are reconstructed; no arbitrary header names/values escape.
- return JSON.stringify({tool:'HeaderGuard',schemaVersion:1,scheme:result.scheme,statusCode:result.statusCode,headerCount:result.headerCount,inputBytes:result.inputBytes,scope:'Limited HTML response header review; not a security certificate.',checks:result.checks.map(c=>({id:c.id,status:c.status,title:META[c.id].title,summary:c.summary,reason:META[c.id].reason,action:META[c.id].action,source:META[c.id].source}))},null,2)+'\n';
+ return JSON.stringify({tool:'HeaderGuard',schemaVersion:1,scheme:result.scheme,statusCode:result.statusCode,headerCount:result.headerCount,inputBytes:result.inputBytes,scope:'Limited HTML response header review; not a security certificate.',notes:result.notes.filter(note=>CONTEXT_NOTES.includes(note)),checks:result.checks.map(c=>({id:c.id,status:c.status,title:META[c.id].title,summary:c.summary,reason:META[c.id].reason,action:META[c.id].action,source:META[c.id].source}))},null,2)+'\n';
 }

@@ -82,3 +82,24 @@ test('analysis and JSON never contain raw cookies, custom names, nonce or URLs',
 test('report field allowlist excludes unrelated raw data added to result objects',()=>{
  const r=run(AFTER);r.headers='RAW_HEADER_SENTINEL';r.checks[0].value='RAW_VALUE_SENTINEL';const out=exportReport(r);assert.ok(!out.includes('RAW_HEADER_SENTINEL'));assert.ok(!out.includes('RAW_VALUE_SENTINEL'));assert.equal(JSON.parse(out).checks.length,6);
 });
+
+test('non-HTTP Unicode whitespace does not turn malformed policies into passes',()=>{
+ for(const space of ['\u00a0','\u2003','\ufeff']){
+  for(const [header,value,id] of [['X-Content-Type-Options','nosniff','nosniff'],['X-Frame-Options','DENY','framing'],['Referrer-Policy','no-referrer','referrer'],['Strict-Transport-Security','max-age=3600','hsts']])
+   assert.equal(state(`${header}: ${space}${value}${space}`,id),'review');
+  assert.equal(state(`Content-Security-Policy: default-src 'self'; object-src 'none'; base-uri 'self'${space}`,'csp'),'review');
+  assert.equal(state(`Content-Security-Policy: frame-ancestors 'none'${space}`,'framing'),'review');
+ }
+ assert.equal(state('X-Content-Type-Options: \tnosniff \t','nosniff'),'pass');
+ assert.equal(state('Strict-Transport-Security: max-age\u00a0=3600','hsts'),'review');
+});
+test('JSON preserves safe response-context warnings without arbitrary note text',()=>{
+ const result=run('HTTP/2 302\nContent-Type: application/json\nLocation: https://private.invalid');
+ result.notes.push('PRIVATE_NOTE_SENTINEL');
+ const report=JSON.parse(exportReport(result));
+ assert.equal(report.notes.length,3);
+ assert.ok(report.notes.some(note=>note.includes('HTML dışı')));
+ assert.ok(report.notes.some(note=>note.includes('2xx')));
+ assert.ok(!JSON.stringify(report).includes('PRIVATE_NOTE_SENTINEL'));
+ assert.ok(!JSON.stringify(report).includes('private.invalid'));
+});
