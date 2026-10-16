@@ -2,7 +2,7 @@
 
 HTML sayfalarının HTTP yanıt başlıklarını **yerel olarak** inceleyen TypeScript projesi. Bir web demosu ve aynı motoru kullanan Node.js CLI içerir. Altı temel kontrolün sonucunu, gerekçesini ve ilgili dokümanı gösterir.
 
-**Geliştiren:** Büşra Buse Uçar · AI desteğiyle geliştirilmiş kişisel öğrenme projesi.
+**Geliştiren:** Büşra Buse Uçar
 
 **Herkese açık demo:** [HeaderGuard'ı aç](https://header-guard-buse.sleek-brush-8818.chatgpt.site)  
 **Kaynak kod:** [busrabuseucar/header-guard](https://github.com/busrabuseucar/header-guard) · **CI:** [GitHub Actions](https://github.com/busrabuseucar/header-guard/actions/workflows/ci.yml)
