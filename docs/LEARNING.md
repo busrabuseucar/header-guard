@@ -33,4 +33,4 @@ Alıştırma ana dalda uygulanmadı. Üretim ortamının HSTS süresini bu eğit
 - Çoklu CSP ve tarayıcı varsayılanları gibi hangi konuları bilerek manuel incelemeye bıraktığın.
 - Eklediğin süre testinin hangi davranışı koruduğu.
 
-Proje AI desteğiyle geliştirildi. Kendi katkını, değiştirdiğin test ve kurallarla somutlaştır.
+Kendi katkını, değiştirdiğin test ve kurallarla somutlaştır.
