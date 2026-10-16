@@ -1,5 +1,11 @@
 # HeaderGuard
 
+## Canlı demonun kapsamı
+
+[Demoyu aç](https://header-guard-buse.sleek-brush-8818.chatgpt.site)
+
+Yapıştırılan HTTP başlıkları cihazında analiz edilir. Önce/sonra içerikleri sentetik örnektir. Araç hedef siteye istek göndermez; sonuç tam bir güvenlik denetimi değildir.
+
 HTML sayfalarının HTTP yanıt başlıklarını **yerel olarak** inceleyen TypeScript projesi. Bir web demosu ve aynı motoru kullanan Node.js CLI içerir. Altı temel kontrolün sonucunu, gerekçesini ve ilgili dokümanı gösterir.
 
 **Geliştiren:** Büşra Buse Uçar
