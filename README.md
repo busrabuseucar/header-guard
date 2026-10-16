@@ -124,3 +124,7 @@ Kaynak ZIP açık dosya/dizin/uzantı listesiyle oluşturulur. Ortam dosyaları,
 - [OWASP: HTTP Headers Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html)
 
 MIT lisansı. Tam bir güvenlik tarayıcısı yerine, sınırları açık bir öğrenme ve ön inceleme aracı olarak tasarlanmıştır.
+
+## İşletim
+
+[İşletim ve sürüm doğrulama](docs/OPERATIONS.md) — kurulum, veri saklama, yayın, geri dönüş ve doğrulama kapsamı.
